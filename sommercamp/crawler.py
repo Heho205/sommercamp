@@ -18,11 +18,25 @@ class SportSpider(Spider):
         "https://www.radsport-rennrad.de/race/radsportler-des-jahres-2025/",
         "https://www.bike24.de/marken?",
         "https://www.bikes.de/marken",
+        "https://www.rosebikes.de/fahrr%C3%A4der/rennrad/race/shave?gad_source=1&gad_campaignid=23628633242&gclid=EAIaIQobChMIjNvqpeKJlgMVtpFQBh15mgDpEAMYASAAEgLto_D_BwE",
+        "https://www.cube.eu/de-de",
+        "https://www.canyon.com/de-de/",
+        "https://www.bergamont.com/de/de/",
+        "https://www.specialized.com/de/de",
+        "https://www.giant-bicycles.com/de",
+        "https://www.liv-cycling.com/de",
+        "https://www.diamantrad.com/de-DE/",
+        "https://ghost-bikes.com/de-de",
+        "https://www.rennrad-news.de/news/",
+        "https://www.radsport-news.com/",
+        "https://www.eurosport.de/radsport/",
+        "https://www.sportschau.de/radsport"
+
     ]
     link_extractor = LxmlLinkExtractor(
         # Beschränke den Crawler, nur Links zu verfolgen,
         # die auf eine der gelisteten Domains verweisen.
-        allow_domains=["www.sportler-des-jahres.de", "www.radsport-rennrad.de", "www.bike24.de", "www.bikes.de"],
+        allow_domains=["www.sportler-des-jahres.de", "www.radsport-rennrad.de", "www.bike24.de", "www.bikes.de", "www.rosebikes.de", "www.cube.eu", "www.canyon.com", "www.bergamont.com", "www.specialized.com", "www.giant-bicycles.com", "www.liv-cycling.com", "www.diamantrad.com", "ghost-bikes.com", "www.rennrad-news.de", "www.radsport-news.com", "www.eurosport.de", "www.sportschau.de"],
     )
     custom_settings = {
         # Identifiziere den Crawler gegenüber den gecrawlten Seiten.
