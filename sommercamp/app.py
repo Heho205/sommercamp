@@ -21,6 +21,8 @@ def app(index_dir) -> None:
     title("All-about-bikes-Suchmaschine")
     markdown("Hier kannst du unsere neue All-about-bikes-Suchmaschine nutzen:")
 
+    
+
     # Erstelle ein Text-Feld, mit dem die Suchanfrage (query) 
     # eingegeben werden kann.
     query = text_input(
