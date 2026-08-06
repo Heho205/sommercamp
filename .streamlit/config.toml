@@ -16,3 +16,6 @@ gatherUsageStats = false
 hideTopBar = true
 
 # Eigene Einstellungen kannst du unterhalb dieser Zeile einfügen.
+[theme]
+base="dark"
+primary.color="rgb(192,192,192,)"
