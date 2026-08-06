@@ -1,15 +1,16 @@
 # Hier importieren wir die benötigten Softwarebibliotheken.
 from os.path import abspath, exists
 from sys import argv
-from streamlit import (text_input, header, title, subheader, 
-    container, markdown, link_button, divider, set_page_config)
+from streamlit import (text_input, header, title, subheader, container, markdown, link_button, divider, set_page_config, segmented_control)
 from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
 
 
+
 # Diese Funktion baut die App für die Suche im gegebenen Index auf.
-def app(index_dir) -> None:
+def app(index_dir_news, index_dir_products) -> None:
+
 
     # Konfiguriere den Titel der Web-App (wird im Browser-Tab angezeigt)
     set_page_config(
@@ -35,6 +36,17 @@ def app(index_dir) -> None:
     if query == "":
         markdown("Bitte gib eine Suchanfrage ein.")
         return
+
+
+    options = ["News", "Products"]
+    selection = segmented_control(
+        "Directions", options, selection_mode="multi"
+    )
+
+    if options == News:
+        index_dir = index_dir_news
+    else:
+        index_dir = index_dir_products
 
     # Öffne den Index.
     index = IndexFactory.of(abspath(index_dir))
@@ -88,11 +100,14 @@ def main():
 
     # Wenn es noch keinen Index gibt, kannst du die Suchmaschine nicht starten.
     if not exists(index_dir):
+        print("Achtung, Index fehlt!")
         exit(1)
+
+    print("TEST")
 
     # Rufe die App-Funktion von oben auf.
     app(index_dir)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
