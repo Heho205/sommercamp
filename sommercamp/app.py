@@ -7,6 +7,23 @@ from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
 
 
+def highlight_word(word: str) -> str:
+    if "€" in word:
+        return  f"**{word}**"
+    else:
+        return word
+
+def preis(words: list[str]) -> list[str]:
+    words_new = []
+    for i, word in enumerate(words):
+        if word == "€" and i>0:
+            word = words[i-1] + "€"
+            words_new.append(word)
+        elif i<len(words)-1 and words[i+1] == "€" :
+            continue
+        else:
+            words_new.append(word)
+    return words_new
 
 # Diese Funktion baut die App für die Suche im gegebenen Index auf.
 def app(index_dir_news, index_dir_products) -> None:
@@ -20,14 +37,14 @@ def app(index_dir_news, index_dir_products) -> None:
 
     # Gib der App einen Titel und eine Kurzbeschreibung:
     title("All-about-bikes")
-    markdown("Suche hier in All-about-bikes:")
-
-    
+    #markdown("Suche hier in All-about-bikes:")  
 
     # Erstelle ein Text-Feld, mit dem die Suchanfrage (query) 
     # eingegeben werden kann.
     query = text_input(
+        label="Suche hier in All-about-bikes:",
         placeholder="Suche...",
+        value=""
     )
 
     # Wenn die Suchanfrage leer ist, dann kannst du nichts suchen.
@@ -35,13 +52,12 @@ def app(index_dir_news, index_dir_products) -> None:
         markdown("Bitte gib eine Suchanfrage ein.")
         return
 
-
     options = ["News", "Products"]
     selection = segmented_control(
         "Wähle:", options, selection_mode="single"
     )
 
-    if options == "News":
+    if selection == "News":
         index_dir = index_dir_news
     else:
         index_dir = index_dir_products
@@ -81,8 +97,27 @@ def app(index_dir_news, index_dir_products) -> None:
             subheader(row["title"])
             # Speichere den Text in einer Variablen (text).
             text = row["text"]
+
+            words = text.split()
+
+            if selection == "Products" :
+                words = preis(words)
+                words = [highlight_word(word) for word in words]
+
+           
+            words = words[:50]            # nur die ersten 50 Wörter behalten
+            text = " ".join(words)        # wieder zu einem Text zusammensetzen
+
+
+
+
+
+
+
+
+
             # Schneide den Text nach 500 Zeichen ab.
-            text = text[:500]
+            #text = text[:500]
             # Ersetze Zeilenumbrüche durch Leerzeichen.
             text = text.replace("\n", " ")
             # Zeige den Dokument-Text an.
@@ -95,7 +130,7 @@ def app(index_dir_news, index_dir_products) -> None:
 def main():
     # Lade den Pfad zum Index aus dem ersten Kommandozeilen-Argument.
     index_dir_news = argv[1]
-    index_dir_products = [2]
+    index_dir_products = argv[2]
 
 
     # Wenn es noch keinen Index gibt, kannst du die Suchmaschine nicht starten.
