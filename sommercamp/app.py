@@ -40,10 +40,10 @@ def app(index_dir_news, index_dir_products) -> None:
 
     options = ["News", "Products"]
     selection = segmented_control(
-        "Directions", options, selection_mode="multi"
+        "Index", options, selection_mode="single"
     )
 
-    if options == News:
+    if options == "News":
         index_dir = index_dir_news
     else:
         index_dir = index_dir_products
@@ -96,17 +96,15 @@ def app(index_dir_news, index_dir_products) -> None:
 # Die Hauptfunktion, die beim Ausführen der Datei aufgerufen wird.
 def main():
     # Lade den Pfad zum Index aus dem ersten Kommandozeilen-Argument.
-    index_dir = argv[1]
+    index_dir_news = argv[1]
+    index_dir_products = argv[2]
 
     # Wenn es noch keinen Index gibt, kannst du die Suchmaschine nicht starten.
-    if not exists(index_dir):
-        print("Achtung, Index fehlt!")
+    if not exists(index_dir_news) or not exists (index_dir_products):
         exit(1)
 
-    print("TEST")
-
     # Rufe die App-Funktion von oben auf.
-    app(index_dir)
+    app(index_dir_news, index_dir_products)
 
 
 if __name__ == '__main__':
