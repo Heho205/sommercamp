@@ -3,7 +3,7 @@ from os.path import abspath, exists
 from sys import argv
 from streamlit import (
     text_input, header, title, subheader, container,
-    markdown, link_button, divider, set_page_config, segmented_control, toggle, spinner)
+    markdown, link_button, divider, set_page_config, segmented_control, toggle, spinner, image)
 from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
@@ -133,9 +133,11 @@ def app(index_dir_news, index_dir_products) -> None:
         page_title="All-about-bikes",
         layout="centered",
     )
+    image("sommercamp/ChatGPT Image 7. Aug. 2026, 17_41_58.png")
+
     set_custom_font()
     # Gib der App einen Titel und eine Kurzbeschreibung:
-    title("All-about-bikes")
+    #title("All-about-bikes")
     # markdown("Suche hier in All-about-bikes:")
 
     # Erstelle ein Text-Feld, mit dem die Suchanfrage (query)
@@ -261,3 +263,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
