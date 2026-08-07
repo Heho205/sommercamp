@@ -31,3 +31,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 bild_pfad = os.path.join(BASE_DIR, 'background.png')
 
 set_png_as_page_bg(bild_pfad)
+
+
+
+
+words = text.split()
+
+            if selection == "Products":
+                words = preis(words)
+                words = [highlight_word(word) for word in words]
+
+            words = words[:50]            # nur die ersten 50 Wörter behalten
+            text = " ".join(words)        # wieder zu einem Text zusammensetzen
