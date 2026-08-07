@@ -13,8 +13,8 @@ def snippet_ai(result) -> str:
     snippet_lines = [
         "Titel: " + result["title"],
         "Url: " + result["url"],
-        "Text: " + result["text"]
-    ]
+        "Text: " + result["text"].replace("\n", " ")
+        ]
     return "\n".join(snippet_lines)
 
 
@@ -73,6 +73,7 @@ def app(index_dir_news, index_dir_products) -> None:
         index_dir = index_dir_news
     else:
         index_dir = index_dir_products
+
 
     # Öffne den Index.
     index = IndexFactory.of(abspath(index_dir))
