@@ -1,33 +1,45 @@
 # Hier importieren wir die benötigten Softwarebibliotheken.
 from os.path import abspath, exists
 from sys import argv
-from streamlit import (text_input, header, title, subheader, container, markdown, link_button, divider, set_page_config, segmented_control)
+from streamlit import (
+    text_input, header, title, subheader, container,
+    markdown, link_button, divider, set_page_config, segmented_control)
 from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
 
 
+def snippet_ai(result) -> str:
+    snippet_lines = [
+        "Titel: " + result["title"],
+        "Url: " + result["url"],
+        "Text: " + result["text"]
+    ]
+    return "\n".join(snippet_lines)
+
+
 def highlight_word(word: str) -> str:
     if "€" in word:
-        return  f"**{word}**"
+        return f"**{word}**"
     else:
         return word
+
 
 def preis(words: list[str]) -> list[str]:
     words_new = []
     for i, word in enumerate(words):
-        if word == "€" and i>0:
+        if word == "€" and i > 0:
             word = words[i-1] + "€"
             words_new.append(word)
-        elif i<len(words)-1 and words[i+1] == "€" :
+        elif i < len(words)-1 and words[i+1] == "€":
             continue
         else:
             words_new.append(word)
     return words_new
 
+
 # Diese Funktion baut die App für die Suche im gegebenen Index auf.
 def app(index_dir_news, index_dir_products) -> None:
-
 
     # Konfiguriere den Titel der Web-App (wird im Browser-Tab angezeigt)
     set_page_config(
@@ -37,9 +49,9 @@ def app(index_dir_news, index_dir_products) -> None:
 
     # Gib der App einen Titel und eine Kurzbeschreibung:
     title("All-about-bikes")
-    #markdown("Suche hier in All-about-bikes:")  
+    # markdown("Suche hier in All-about-bikes:")
 
-    # Erstelle ein Text-Feld, mit dem die Suchanfrage (query) 
+    # Erstelle ein Text-Feld, mit dem die Suchanfrage (query)
     # eingegeben werden kann.
     query = text_input(
         label="Suche hier in All-about-bikes:",
@@ -64,7 +76,7 @@ def app(index_dir_news, index_dir_products) -> None:
 
     # Öffne den Index.
     index = IndexFactory.of(abspath(index_dir))
-    # Initialisiere den Such-Algorithmus. 
+    # Initialisiere den Such-Algorithmus.
     searcher = Retriever(
         index,
         wmodel="BM25",
@@ -91,33 +103,26 @@ def app(index_dir_news, index_dir_products) -> None:
 
     # Gib nun der Reihe nach, alle Suchergebnisse aus.
     for _, row in results.iterrows():
+        print(snippet_ai(row))
+        # exit()
+
         # Pro Suchergebnis, erstelle eine Box (container).
         with container(border=True):
             # Zeige den Titel der gefundenen Webseite an.
             subheader(row["title"])
             # Speichere den Text in einer Variablen (text).
             text = row["text"]
-
             words = text.split()
 
-            if selection == "Products" :
+            if selection == "Products":
                 words = preis(words)
                 words = [highlight_word(word) for word in words]
 
-           
             words = words[:50]            # nur die ersten 50 Wörter behalten
             text = " ".join(words)        # wieder zu einem Text zusammensetzen
 
-
-
-
-
-
-
-
-
             # Schneide den Text nach 500 Zeichen ab.
-            #text = text[:500]
+            # text = text[:500]
             # Ersetze Zeilenumbrüche durch Leerzeichen.
             text = text.replace("\n", " ")
             # Zeige den Dokument-Text an.
@@ -132,9 +137,12 @@ def main():
     index_dir_news = argv[1]
     index_dir_products = argv[2]
 
+    print("Lade News-Index:", index_dir_news)
+    print("Lade Product-Index:", index_dir_products)
 
     # Wenn es noch keinen Index gibt, kannst du die Suchmaschine nicht starten.
     if not exists(index_dir_news) or not exists(index_dir_products):
+        print("Index fehlt!!!")
         exit(1)
 
     # Rufe die App-Funktion von oben auf.
@@ -142,4 +150,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print("Hallo")
     main()
