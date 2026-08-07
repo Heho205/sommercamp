@@ -3,19 +3,45 @@ from os.path import abspath, exists
 from sys import argv
 from streamlit import (
     text_input, header, title, subheader, container,
-    markdown, link_button, divider, set_page_config, segmented_control)
+    markdown, link_button, divider, set_page_config, segmented_control, toggle)
 from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
+from openai import OpenAI
 
 
-def snippet_ai(result) -> str:
+#definiert den prompt für Blablador und führt ihn aus, damit nicht überall das selbe steht
+def aisnippet(result)->str:
     snippet_lines = [
+        "\n",
         "Titel: " + result["title"],
-        "Url: " + result["url"],
-        "Text: " + result["text"].replace("\n", " ")
-        ]
+        "Text: " + result["text"].replace("\n", " "),
+        "URL: " + result["url"],
+    ]
+    #snippetlines = snippet_lines.replace("\n", " ")
     return "\n".join(snippet_lines)
+
+
+def allsnippet(results, query) -> str:
+    aisnippets = "Beantworte die Frage '" + query + "' in insgesamt höchstens 50 Wörten auf deutsch mithilfe der Suchergebnisse :\n\n"
+    for _, result in results.iterrows():
+        aisnippets = aisnippets + aisnippet(result)
+    return aisnippets
+
+
+def get_ai_summary(results, query) -> str:
+    prompt = allsnippet(results, query)
+
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key="glpat-yoaOjCxEAJ3z7Zn1WHDDx286MQp1OmR3bQk.01.0z1dn4qi3",
+        base_url="https://api.blablador.fz-juelich.de/v1/",
+    )
+    response = client.responses.create(
+        model="alias-fast",
+        input=prompt,
+    )
+    return response.output_text
 
 
 def highlight_word(word: str) -> str:
@@ -102,11 +128,13 @@ def app(index_dir_news, index_dir_products) -> None:
     # Wenn es Suchergebnisse gibt, dann zeige an, wie viele.
     markdown(f"{len(results)} Suchergebnisse.")
 
+    show_ai = toggle("KI Zusammenfassung aktivieren")
+    if show_ai:
+        ai_summary = get_ai_summary(results, query)
+        markdown(ai_summary)
+    
     # Gib nun der Reihe nach, alle Suchergebnisse aus.
     for _, row in results.iterrows():
-        print(snippet_ai(row))
-        # exit()
-
         # Pro Suchergebnis, erstelle eine Box (container).
         with container(border=True):
             # Zeige den Titel der gefundenen Webseite an.
@@ -151,5 +179,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print("Hallo")
     main()
