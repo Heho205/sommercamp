@@ -197,7 +197,7 @@ def app(index_dir_news, index_dir_products) -> None:
         ai_summary = get_ai_summary(results, query, selection)
         #markdown(ai_summary)
         with container(border=True):
-            subheader("✨ KI generierte Zusammenfassung ✨")
+            subheader("✨ Race Mausi KI ✨")
             markdown(ai_summary)
 
     # Zeige eine Unter-Überschrift vor den Suchergebnissen an.
