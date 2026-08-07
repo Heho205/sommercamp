@@ -18,6 +18,7 @@ dependencies = [
     "streamlit~=1.30",
     "watchdog~=6.0",
     "starlette<1.4.0",
+    "openai",
 ]
 dynamic = ["version"]
 
