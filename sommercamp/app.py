@@ -40,8 +40,8 @@ def aisnippet(result)->str:
     return "\n".join(snippet_lines)
 
 
-def allsnippet(results, query, options) -> str:
-    if options == "News":
+def allsnippet(results, query, selection) -> str:
+    if selection == "News":
         # das ist der news prompt
         aisnippets = "Beantworte die Frage '" + query + "' in insgesamt höchstens 50 Wörten auf deutsch mithilfe der Suchergebnisse :\n\n"
         for _, result in results.iterrows():
@@ -55,8 +55,8 @@ def allsnippet(results, query, options) -> str:
         return aisnippets
 
 
-def get_ai_summary(results, query, options) -> str:
-    prompt = allsnippet(results, query, options)
+def get_ai_summary(results, query, selection) -> str:
+    prompt = allsnippet(results, query, selection)
 
     client = OpenAI(
         # This is the default and can be omitted
@@ -147,7 +147,7 @@ def app(index_dir_news, index_dir_products) -> None:
 
     show_ai = toggle("KI Zusammenfassung aktivieren")
     if show_ai:
-        ai_summary = get_ai_summary(results, query, options)
+        ai_summary = get_ai_summary(results, query, selection)
         #markdown(ai_summary)
         with container(border=True):
             subheader("✨ KI generierte Zusammenfassung ✨")
