@@ -3,12 +3,30 @@ from os.path import abspath, exists
 from sys import argv
 from streamlit import (
     text_input, header, title, subheader, container,
-    markdown, link_button, divider, set_page_config, segmented_control, toggle)
+    markdown, link_button, divider, set_page_config, segmented_control, toggle, spinner)
 from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
 from openai import OpenAI
 
+
+def get_ai_snippet_summary(text: str, query: str) -> str:
+    prompt = (
+        "Fasse den folgenden Text in höchstens 30 Wörten auf Deutsch zusammen, "
+        f"mit Bezug auf die Suchanfrage '{query}'. "
+        "Gib Preise dabei exakt wie im Originaltext wieder:\n\n"
+        f"{text}"
+    )
+
+    client = OpenAI(
+        api_key="glpat-yoaOjCxEAJ3z7Zn1WHDDx286MQp1OmR3bQk.01.0z1dn4qi3",  # denk an st.secrets, siehe unten
+        base_url="https://api.blablador.fz-juelich.de/v1/",
+    )
+    response = client.responses.create(
+        model="alias-fast",
+        input=prompt,
+    )
+    return response.output_text
 
 #definiert den prompt für Blablador und führt ihn aus, damit nicht überall das selbe steht
 def aisnippet(result)->str:
@@ -22,15 +40,23 @@ def aisnippet(result)->str:
     return "\n".join(snippet_lines)
 
 
-def allsnippet(results, query) -> str:
-    aisnippets = "Beantworte die Frage '" + query + "' in insgesamt höchstens 50 Wörten auf deutsch mithilfe der Suchergebnisse :\n\n"
-    for _, result in results.iterrows():
-        aisnippets = aisnippets + aisnippet(result)
-    return aisnippets
+def allsnippet(results, query, options) -> str:
+    if options == "News":
+        # das ist der news prompt
+        aisnippets = "Beantworte die Frage '" + query + "' in insgesamt höchstens 50 Wörten auf deutsch mithilfe der Suchergebnisse :\n\n"
+        for _, result in results.iterrows():
+            aisnippets = aisnippets + aisnippet(result)
+        return aisnippets
+    else:
+        # das ist der product prompt
+        aisnippets = "Beantworte die Frage '" + query + "' in insgesamt höchstens 50 Wörten auf deutsch mithilfe der Suchergebnisse es geht dabei um den Kauf des in der Suchanfrage stehenden Products:\n\n"
+        for _, result in results.iterrows():
+            aisnippets = aisnippets + aisnippet(result)
+        return aisnippets
 
 
-def get_ai_summary(results, query) -> str:
-    prompt = allsnippet(results, query)
+def get_ai_summary(results, query, options) -> str:
+    prompt = allsnippet(results, query, options)
 
     client = OpenAI(
         # This is the default and can be omitted
@@ -100,7 +126,6 @@ def app(index_dir_news, index_dir_products) -> None:
     else:
         index_dir = index_dir_products
 
-
     # Öffne den Index.
     index = IndexFactory.of(abspath(index_dir))
     # Initialisiere den Such-Algorithmus.
@@ -116,22 +141,30 @@ def app(index_dir_news, index_dir_products) -> None:
     # Führe die Such-Pipeline aus und suche nach der Suchanfrage.
     results = pipeline.search(query)
 
+    if len(results) == 0:
+        markdown("Keine Suchergebnisse.")
+        return
+
+    show_ai = toggle("KI Zusammenfassung aktivieren")
+    if show_ai:
+        ai_summary = get_ai_summary(results, query, options)
+        #markdown(ai_summary)
+        with container(border=True):
+            subheader("✨ KI generierte Zusammenfassung ✨")
+            markdown(ai_summary)
+
     # Zeige eine Unter-Überschrift vor den Suchergebnissen an.
     divider()
     header("Suchergebnisse")
 
     # Wenn die Ergebnisliste leer ist, gib einen Hinweis aus.
-    if len(results) == 0:
-        markdown("Keine Suchergebnisse.")
-        return
+    
+
 
     # Wenn es Suchergebnisse gibt, dann zeige an, wie viele.
     markdown(f"{len(results)} Suchergebnisse.")
 
-    show_ai = toggle("KI Zusammenfassung aktivieren")
-    if show_ai:
-        ai_summary = get_ai_summary(results, query)
-        markdown(ai_summary)
+    
     
     # Gib nun der Reihe nach, alle Suchergebnisse aus.
     for _, row in results.iterrows():
@@ -141,19 +174,22 @@ def app(index_dir_news, index_dir_products) -> None:
             subheader(row["title"])
             # Speichere den Text in einer Variablen (text).
             text = row["text"]
-            words = text.split()
 
-            if selection == "Products":
-                words = preis(words)
-                words = [highlight_word(word) for word in words]
-
-            words = words[:50]            # nur die ersten 50 Wörter behalten
-            text = " ".join(words)        # wieder zu einem Text zusammensetzen
+             # KI-Zusammenfassung für jedes Suchergebnis (immer aktiv)
+            with spinner("Erstelle KI-Zusammenfassung..."):
+                text = get_ai_snippet_summary(text, query)
 
             # Schneide den Text nach 500 Zeichen ab.
             # text = text[:500]
             # Ersetze Zeilenumbrüche durch Leerzeichen.
             text = text.replace("\n", " ")
+
+            if selection == "Products":
+                words = text.split()
+                words = preis(words)
+                words = [highlight_word(word) for word in words]
+                text = " ".join(words)
+
             # Zeige den Dokument-Text an.
             markdown(text)
             # Gib Nutzern eine Schaltfläche, um die Seite zu öffnen.
