@@ -8,7 +8,42 @@ from pyterrier import IndexFactory
 from pyterrier.terrier import Retriever
 from pyterrier.text import get_text
 from openai import OpenAI
+from pyterrier_dr import SBertBiEncoder
 
+
+def set_custom_font():
+    font_css = '''
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500&display=swap');
+
+    body {
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    h1, h2, h3 {
+        font-family: 'Oswald', sans-serif !important;
+    }
+    </style>
+    '''
+    markdown(font_css, unsafe_allow_html=True)
+
+def get_ai_snippet_titel(text: str, query: str) -> str:
+    prompt = (
+        "Fasse den folgenden Text in höchstens 8 Wörten auf Deutsch , "
+        f"mit Bezug auf die Suchanfrage '{query}' in einem Passenden Titel zusammen verwende dafür nicht zwangsläufig die Suchanfrage. "
+        "Gib Preise dabei exakt wie im Originaltext wieder, wenn vorhanden:\n\n"
+        f"{text}"
+    )
+
+    client = OpenAI(
+        api_key="glpat-pYioAiJD2cny6FMAdCjWjm86MQp1OmR3bQk.01.0z0qrxhou",  # denk an st.secrets, siehe unten
+        base_url="https://api.blablador.fz-juelich.de/v1/",
+    )
+    response = client.responses.create(
+        model="alias-fast",
+        input=prompt,
+    )
+    return response.output_text
 
 def get_ai_snippet_summary(text: str, query: str) -> str:
     prompt = (
@@ -19,7 +54,7 @@ def get_ai_snippet_summary(text: str, query: str) -> str:
     )
 
     client = OpenAI(
-        api_key="glpat-yoaOjCxEAJ3z7Zn1WHDDx286MQp1OmR3bQk.01.0z1dn4qi3",  # denk an st.secrets, siehe unten
+        api_key="glpat-pYioAiJD2cny6FMAdCjWjm86MQp1OmR3bQk.01.0z0qrxhou",  # denk an st.secrets, siehe unten
         base_url="https://api.blablador.fz-juelich.de/v1/",
     )
     response = client.responses.create(
@@ -98,7 +133,7 @@ def app(index_dir_news, index_dir_products) -> None:
         page_title="All-about-bikes",
         layout="centered",
     )
-
+    set_custom_font()
     # Gib der App einen Titel und eine Kurzbeschreibung:
     title("All-about-bikes")
     # markdown("Suche hier in All-about-bikes:")
@@ -126,6 +161,9 @@ def app(index_dir_news, index_dir_products) -> None:
     else:
         index_dir = index_dir_products
 
+    dense = toggle("KI Suche aktivieren")
+
+
     # Öffne den Index.
     index = IndexFactory.of(abspath(index_dir))
     # Initialisiere den Such-Algorithmus.
@@ -138,8 +176,15 @@ def app(index_dir_news, index_dir_products) -> None:
     text_getter = get_text(index, metadata=["url", "title", "text"])
     # Baue die Such-Pipeline zusammen.
     pipeline = searcher >> text_getter
+
+    if dense:
+        # Dense retriver Model laden
+        model = SBertBiEncoder('sentence-transformers/all-MiniLM-L6-v2')
+        pipeline = (pipeline % 8 >> model.scorer()) ^ pipeline
+
     # Führe die Such-Pipeline aus und suche nach der Suchanfrage.
     results = pipeline.search(query)
+
 
     if len(results) == 0:
         markdown("Keine Suchergebnisse.")
@@ -170,10 +215,10 @@ def app(index_dir_news, index_dir_products) -> None:
     for _, row in results.iterrows():
         # Pro Suchergebnis, erstelle eine Box (container).
         with container(border=True):
-            # Zeige den Titel der gefundenen Webseite an.
-            subheader(row["title"])
             # Speichere den Text in einer Variablen (text).
             text = row["text"]
+            # Zeige den Titel der gefundenen Webseite an.
+            subheader(get_ai_snippet_titel(text, query))
 
              # KI-Zusammenfassung für jedes Suchergebnis (immer aktiv)
             with spinner("Erstelle KI-Zusammenfassung..."):
